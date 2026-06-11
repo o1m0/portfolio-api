@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/o1m0/portfolio-api/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -32,6 +33,15 @@ func Init() {
 	if err != nil {
 		panic("DBに接続できませんでした")
 	}
+
+	db.AutoMigrate(
+		&models.User{},
+		&models.Article{},
+		&models.Category{},
+		&models.Work{},
+		&models.ArticleCategory{},
+		&models.WorkCategory{},
+	)
 
 	DB = db
 }
