@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/o1m0/portfolio-api/db"
@@ -10,7 +11,29 @@ import (
 
 func GetArticles(c *gin.Context) {
 	var articles []models.Article
-	db.DB.Find(&articles)
+	query := db.DB
+
+	search := c.Query("search")
+	if search != "" {
+		query = query.Where("title LIKE ?", "%"+search+"%")
+	}
+
+	sort := c.Query("sort")
+	if sort != "" {
+		query = query.Order(sort)
+	}
+
+	page := c.DefaultQuery("page", "1")
+	limit := c.DefaultQuery("limit", "10")
+
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+
+	offset := (pageInt - 1) * limitInt
+
+	query = query.Limit(limitInt).Offset(offset)
+
+	query.Find(&articles)
 	c.JSON(http.StatusOK, articles)
 }
 
