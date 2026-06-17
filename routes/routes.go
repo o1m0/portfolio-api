@@ -8,7 +8,12 @@ import (
 
 func Init(r *gin.Engine) {
 	r.POST("/auth/login", handlers.Login)
+	r.GET("/articles", handlers.GetArticles)
+	r.GET("/articles/:id", handlers.DetailArticle)
 
 	auth := r.Group("/")
 	auth.Use(middleware.AuthRequired())
+	auth.POST("/articles", handlers.CreateArticle)
+	auth.PUT("/articles/:id", handlers.UpdateArticle)
+	auth.DELETE("/articles/:id", handlers.DeleteArticle)
 }
