@@ -11,4 +11,5 @@ type Work struct {
 	GithubURL   string
 	DemoURL     string
 	ImageURL    string
+	Categories  []Category `gorm:"many2many:work_categories;"`
 }

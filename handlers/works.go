@@ -11,16 +11,14 @@ import (
 
 func GetWorks(c *gin.Context) {
 	var works []models.Work
-	db.DB.Find(&works)
+	db.DB.Preload("Categories").Find(&works)
 	c.JSON(http.StatusOK, works)
 }
 
 func DetailWork(c *gin.Context) {
 	var work models.Work
-
 	id := c.Param("id")
-
-	result := db.DB.First(&work, id)
+	result := db.DB.Preload("Categories").First(&work, id)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "記事が見つかりません"})
 		return
