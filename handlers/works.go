@@ -11,7 +11,35 @@ import (
 
 func GetWorks(c *gin.Context) {
 	var works []models.Work
-	db.DB.Preload("Categories").Find(&works)
+	query := db.DB.Preload("Categories")
+
+	search := c.Query("search")
+	if search != "" {
+		query = query.Where("title LIKE ?", "%"+search+"%")
+	}
+
+	sort := c.Query("sort")
+	if sort != "" {
+		query = query.Order(sort)
+	}
+
+	categoryID := c.Query("category_id")
+	if categoryID != "" {
+		query = query.Joins("JOIN work_categories ON work_categories.work_id = works.id").
+			Where("work_categories.category_id = ?", categoryID)
+	}
+
+	page := c.DefaultQuery("page", "1")
+	limit := c.DefaultQuery("limit", "10")
+
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+
+	offset := (pageInt - 1) * limitInt
+
+	query = query.Limit(limitInt).Offset(offset)
+
+	query.Find(&works)
 	c.JSON(http.StatusOK, works)
 }
 
