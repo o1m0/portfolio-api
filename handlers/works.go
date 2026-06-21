@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/o1m0/portfolio-api/db"
@@ -103,4 +104,44 @@ func DeleteWork(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "削除しました"})
+}
+
+func AddWorkCategory(c *gin.Context) {
+
+	type AddCategoryInput struct {
+		CategoryID uint `json:"category_id"`
+	}
+
+	id := c.Param("id")
+
+	var input AddCategoryInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "入力が正しくありません"})
+		return
+	}
+
+	var work models.Work
+	result := db.DB.First(&work, id)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "workが見つかりません"})
+		return
+	}
+
+	var category models.Category
+	result = db.DB.First(&category, input.CategoryID)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "カテゴリーが見つかりません"})
+		return
+	}
+
+	idInt, _ := strconv.Atoi(id)
+	WorkCategory := models.WorkCategory{
+		WorkID:     uint(idInt),
+		CategoryID: input.CategoryID,
+	}
+
+	db.DB.Create(&WorkCategory)
+
+	c.JSON(http.StatusCreated, WorkCategory)
+
 }

@@ -23,4 +23,6 @@ func Init(r *gin.Engine) {
 	auth.POST("/works", handlers.CreateWork)
 	auth.PUT("/works/:id", handlers.UpdateWork)
 	auth.DELETE("/works/:id", handlers.DeleteWork)
+	auth.POST("/articles/:id/categories", handlers.AddArticleCategory)
+	auth.POST("/works/:id/categories", handlers.AddWorkCategory)
 }

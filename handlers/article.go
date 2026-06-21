@@ -11,7 +11,7 @@ import (
 
 func GetArticles(c *gin.Context) {
 	var articles []models.Article
-	query := db.DB
+	query := db.DB.Preload("Categories")
 
 	search := c.Query("search")
 	if search != "" {
@@ -21,6 +21,12 @@ func GetArticles(c *gin.Context) {
 	sort := c.Query("sort")
 	if sort != "" {
 		query = query.Order(sort)
+	}
+
+	categoryID := c.Query("category_id")
+	if categoryID != "" {
+		query = query.Joins("JOIN article_categories ON article_categories.article_id = articles.id").
+			Where("article_categories.category_id = ?", categoryID)
 	}
 
 	page := c.DefaultQuery("page", "1")
@@ -104,12 +110,12 @@ func UpdateArticle(c *gin.Context) {
 }
 
 func DeleteArticle(c *gin.Context) {
-
 	var article models.Article
 
 	id := c.Param("id")
 
-	result := db.DB.First(&article, id)
+	result := db.DB.Preload("Categories").First(&article, id)
+
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "記事が見つかりません"})
 		return
@@ -122,4 +128,43 @@ func DeleteArticle(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "削除しました"})
+}
+
+func AddArticleCategory(c *gin.Context) {
+
+	type AddCategoryInput struct {
+		CategoryID uint `json:"category_id"`
+	}
+
+	id := c.Param("id")
+
+	var input AddCategoryInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "入力が正しくありません"})
+		return
+	}
+
+	var article models.Article
+	result := db.DB.First(&article, id)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "記事が見つかりません"})
+		return
+	}
+
+	var category models.Category
+	result = db.DB.First(&category, input.CategoryID)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "カテゴリーが見つかりません"})
+		return
+	}
+
+	idInt, _ := strconv.Atoi(id)
+	articleCategory := models.ArticleCategory{
+		ArticleID:  uint(idInt),
+		CategoryID: input.CategoryID,
+	}
+
+	db.DB.Create(&articleCategory)
+
+	c.JSON(http.StatusCreated, articleCategory)
 }
