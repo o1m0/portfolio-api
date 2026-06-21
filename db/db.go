@@ -8,6 +8,7 @@ import (
 	"github.com/o1m0/portfolio-api/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -29,7 +30,9 @@ func Init() {
 		host, port, user, password, dbname,
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		panic("DBに接続できませんでした")
 	}

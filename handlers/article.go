@@ -63,14 +63,13 @@ func DetailArticle(c *gin.Context) {
 
 	id := c.Param("id")
 
-	result := db.DB.First(&article, id)
+	result := db.DB.Preload("Categories").First(&article, id)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "記事が見つかりません"})
 		return
 	}
 
 	c.JSON(http.StatusOK, article)
-
 }
 
 func UpdateArticle(c *gin.Context) {
